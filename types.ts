@@ -18,8 +18,11 @@ export interface ContentItem {
 }
 
 export interface SiteInfo {
+  siteName?: string;
+  siteDescription?: string;
   aboutMarib: string;
   aboutSheikh: string;
+  maintenanceMode?: boolean;
 }
 
 export type ViewState = 'home' | 'search' | 'library' | 'profile' | 'detail' | 'search_view';

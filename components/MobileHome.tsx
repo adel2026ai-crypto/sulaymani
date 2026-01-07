@@ -237,7 +237,7 @@ const MobileHome: React.FC<MobileHomeProps> = ({ content }) => {
   const [showLogin, setShowLogin] = useState(false);
   const [profileSubView, setProfileSubView] = useState<'main' | 'password' | 'edit-data' | 'about-sheikh' | 'about-marib'>('main');
   
-  const [siteInfo, setSiteInfo] = useState<SiteInfo>({ aboutMarib: '', aboutSheikh: '' });
+  const [siteInfo, setSiteInfo] = useState<SiteInfo>({ siteName: '', siteDescription: '', aboutMarib: '', aboutSheikh: '' });
   const [tempDisplayName, setTempDisplayName] = useState('');
   
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -626,8 +626,13 @@ const MobileHome: React.FC<MobileHomeProps> = ({ content }) => {
         <div className="px-6 pt-10 pb-0">
           <div className="flex justify-between items-center mb-8">
             <div className="text-right">
-              <h1 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest leading-none mb-1">دار الحديث بمأرب</h1>
-              <p className="text-[9px] font-bold text-gray-400 mb-2">مكتبة الشيخ أبي الحسن السليماني</p>
+              {/* Linked Site Identity Text from Database */}
+              <h1 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest leading-none mb-1">
+                {siteInfo.siteName || 'دار الحديث بمأرب'}
+              </h1>
+              <p className="text-[9px] font-bold text-gray-400 mb-2">
+                {siteInfo.siteDescription || 'مكتبة الشيخ أبي الحسن السليماني'}
+              </p>
               <h2 className="text-2xl font-black text-gray-800 leading-none">الرئيسية</h2>
             </div>
             <div onClick={() => { setActiveTab('profile'); setProfileSubView('main'); setSelectedItem(null); setShowLogin(false); }} className="w-11 h-11 bg-white rounded-xl shadow-[0_4px_15px_rgba(0,0,0,0.04)] border border-gray-50 flex items-center justify-center text-gray-400 overflow-hidden shrink-0 cursor-pointer active:scale-90 transition-transform">

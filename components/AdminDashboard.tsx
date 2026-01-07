@@ -27,7 +27,19 @@ import {
   Search,
   AlertTriangle,
   FolderPlus,
-  MessageCircleQuestion
+  MessageCircleQuestion,
+  TrendingUp,
+  BarChart3,
+  PieChart,
+  Activity,
+  ShieldCheck,
+  Globe,
+  Cpu,
+  Database,
+  Info,
+  // Fix: Added missing Check and Lock icon imports
+  Check,
+  Lock
 } from 'lucide-react';
 import { ContentItem, ContentType, SiteInfo } from '../types';
 import { db, auth } from '../firebase';
@@ -69,6 +81,7 @@ const SidebarItem: React.FC<any> = ({ icon, label, active, onClick, count }) => 
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ content, user }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>('all');
+  const [catFilterType, setCatFilterType] = useState<ContentType>('book');
   const [isAddingContent, setIsAddingContent] = useState(false);
   const [editingItem, setEditingItem] = useState<ContentItem | null>(null);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
@@ -83,7 +96,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ content, user }) => {
   const [searchQuery, setSearchQuery] = useState('');
   
   const ADMIN_EMAIL = 'adel2026ai@gmail.com';
-  const [siteInfo, setSiteInfo] = useState<SiteInfo>({ aboutMarib: '', aboutSheikh: '' });
+  const [siteInfo, setSiteInfo] = useState<SiteInfo>({ 
+    siteName: 'دار الحديث بمأرب', 
+    siteDescription: 'المكتبة العلمية للشيخ أبي الحسن السليماني',
+    aboutMarib: '', 
+    aboutSheikh: '',
+    maintenanceMode: false
+  });
   const [formData, setFormData] = useState<Partial<ContentItem>>({ 
     type: 'book', mainCategory: '', subCategory: '', volumeNumber: 1, author: 'الشيخ أبي الحسن السليماني'
   });
@@ -111,6 +130,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ content, user }) => {
     if (searchQuery) items = items.filter(i => i.title.toLowerCase().includes(searchQuery.toLowerCase()));
     return items;
   }, [content, activeTab, searchQuery]);
+
+  const filteredCategories = useMemo(() => {
+    return categories.filter(c => c.type === catFilterType);
+  }, [categories, catFilterType]);
 
   const triggerDelete = (e: React.MouseEvent, coll: string, id: string, title: string) => {
     e.preventDefault(); e.stopPropagation();
@@ -159,6 +182,64 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ content, user }) => {
   const inputStyle = "w-full bg-gray-50 border border-gray-200 p-4 rounded-xl font-bold text-gray-900 focus:bg-white focus:ring-4 focus:ring-indigo-50 transition-all outline-none appearance-none text-sm text-right";
   const labelStyle = "text-sm font-black text-gray-500 mb-2 block uppercase tracking-wider text-right";
 
+  const renderStats = () => {
+    const total = content.length;
+    const books = content.filter(i => i.type === 'book').length;
+    const audio = content.filter(i => i.type === 'audio').length;
+    const video = content.filter(i => i.type === 'video').length;
+    const fatwa = content.filter(i => i.type === 'fatwa').length;
+
+    return (
+      <div className="space-y-10 animate-in fade-in duration-500">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+           <StatCard label="المؤلفات والكتب" count={books} icon={<BookOpen size={24}/>} color="blue" percent={total > 0 ? (books/total)*100 : 0} />
+           <StatCard label="الدروس الصوتية" count={audio} icon={<Mic size={24}/>} color="purple" percent={total > 0 ? (audio/total)*100 : 0} />
+           <StatCard label="المرئيات العلمية" count={video} icon={<Video size={24}/>} color="red" percent={total > 0 ? (video/total)*100 : 0} />
+           <StatCard label="الفتاوى والأسئلة" count={fatwa} icon={<MessageCircleQuestion size={24}/>} color="green" percent={total > 0 ? (fatwa/total)*100 : 0} />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+           <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-10 border border-gray-50 shadow-sm">
+              <div className="flex justify-between items-center mb-10">
+                 <div className="flex items-center gap-3">
+                    <div className="w-2 h-8 bg-indigo-600 rounded-full"></div>
+                    <h3 className="text-xl font-black text-gray-800">توزيع المحتوى العلمي</h3>
+                 </div>
+                 <BarChart3 className="text-gray-200" size={30} />
+              </div>
+              
+              <div className="space-y-8">
+                 <ProgressRow label="الكتب والمجلدات" count={books} total={total} color="bg-blue-500" />
+                 <ProgressRow label="الدروس واللقاءات" count={audio} total={total} color="bg-purple-500" />
+                 <ProgressRow label="المحاضرات المرئية" count={video} total={total} color="bg-red-500" />
+                 <ProgressRow label="الفتاوى والجوابات" count={fatwa} total={total} color="bg-green-500" />
+              </div>
+           </div>
+
+           <div className="bg-indigo-600 rounded-[2.5rem] p-10 text-white shadow-xl shadow-indigo-100 relative overflow-hidden flex flex-col justify-center items-center text-center">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32"></div>
+              <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/5 rounded-full -ml-20 -mb-20"></div>
+              
+              <Activity className="mb-6 opacity-60" size={60} />
+              <h4 className="text-lg font-bold opacity-80 mb-2">إجمالي المواد العلمية</h4>
+              <div className="text-7xl font-black mb-6">{total}</div>
+              <p className="text-sm font-bold opacity-70 leading-relaxed max-w-[200px]">تم نشر هذه المواد العلمية بدار الحديث بمأرب</p>
+           </div>
+        </div>
+      </div>
+    );
+  };
+
+  const handleSaveSettings = async () => {
+    setIsProcessing(true);
+    try { 
+      await setDoc(doc(db, 'settings', 'general'), siteInfo, { merge: true }); 
+      showToast('تم حفظ كافة الإعدادات بنجاح'); 
+    }
+    catch(e) { showToast('فشل في حفظ الإعدادات', 'error'); }
+    finally { setIsProcessing(false); }
+  };
+
   return (
     <div className="flex h-screen bg-[#F8F9FB] overflow-hidden font-['IBM_Plex_Sans_Arabic']" dir="rtl">
       {isProcessing && (
@@ -176,8 +257,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ content, user }) => {
             <div className="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-5">
               <AlertTriangle size={32} />
             </div>
-            <h3 className="text-xl font-black text-gray-900 mb-2 text-right">تأكيد الحذف</h3>
-            <p className="text-gray-500 font-bold mb-6 text-base text-right">هل أنت متأكد من حذف <span className="text-red-600">"{confirmDelete.title}"</span>؟</p>
+            <h3 className="text-xl font-black text-gray-900 mb-2">تأكيد الحذف</h3>
+            <p className="text-gray-500 font-bold mb-6 text-base">هل أنت متأكد من حذف <span className="text-red-600">"{confirmDelete.title}"</span>؟</p>
             <div className="flex gap-3">
               <button onClick={executeDelete} className="flex-1 bg-red-600 text-white py-4 rounded-xl font-black shadow-lg shadow-red-50 text-sm">تأكيد الحذف</button>
               <button onClick={() => setConfirmDelete({ ...confirmDelete, show: false })} className="flex-1 bg-gray-100 text-gray-500 py-4 rounded-xl font-black text-sm">إلغاء</button>
@@ -193,19 +274,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ content, user }) => {
       )}
 
       <aside className="w-72 bg-white border-l border-gray-100 flex flex-col shadow-sm">
-        <div className="p-8">
+        <div className="p-8 pb-4">
           <div className="flex items-center gap-3 mb-10">
             <div className="w-11 h-11 purple-gradient rounded-xl flex items-center justify-center text-white shadow-lg"><Layers size={22} /></div>
             <h1 className="text-lg font-black text-gray-800">لوحة التحكم</h1>
           </div>
           
-          <div className="space-y-2 mb-10">
+          <div className="space-y-2 mb-8">
             <SidebarItem icon={<LayoutDashboard size={20} />} label="المحتوى العام" active={activeTab === 'all'} onClick={() => setActiveTab('all')} />
             <SidebarItem icon={<Tag size={20} />} label="إدارة الأقسام" active={activeTab === 'categories'} onClick={() => setActiveTab('categories')} />
-            <SidebarItem icon={<SettingsIcon size={20} />} label="الإعدادات" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
           </div>
 
-          <div className="flex-1 overflow-y-auto no-scrollbar max-h-[50vh]">
+          <div className="flex-1 overflow-y-auto no-scrollbar max-h-[45vh] mb-4">
             <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest px-4 mb-4 text-right">الأقسام العلمية</p>
             <div className="space-y-1.5">
               {categories.map(cat => (
@@ -221,7 +301,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ content, user }) => {
             </div>
           </div>
         </div>
-        <div className="mt-auto p-6 border-t bg-gray-50/30">
+        
+        <div className="mt-auto p-6 space-y-2 bg-gray-50/30 border-t">
+          <SidebarItem icon={<SettingsIcon size={20} />} label="الإعدادات الفنية" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
           <button onClick={() => signOut(auth)} className="w-full flex items-center justify-center gap-2 text-red-500 p-3.5 rounded-xl font-black hover:bg-red-50 transition-all text-sm"><LogOut size={16} /> تسجيل الخروج</button>
         </div>
       </aside>
@@ -230,70 +312,157 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ content, user }) => {
         <header className="flex justify-between items-center mb-10">
           <div>
             <h2 className="text-3xl font-black text-gray-900 mb-1.5">
-              {activeTab === 'all' ? 'المكتبة الشاملة' : activeTab === 'categories' ? 'إدارة التصنيفات' : activeTab === 'settings' ? 'إعدادات المنصة' : `قسم: ${activeTab}`}
+              {activeTab === 'all' ? 'إحصائيات المنصة' : activeTab === 'categories' ? 'إدارة التصنيفات' : activeTab === 'settings' ? 'إعدادات المنصة' : `قسم: ${activeTab}`}
             </h2>
-            <p className="text-gray-500 text-sm font-bold">{filteredItems.length} مادة علمية متوفرة حالياً</p>
+            <p className="text-gray-500 text-sm font-bold">{activeTab === 'all' ? 'عرض نظرة عامة على المحتوى العلمي' : `${filteredItems.length} مادة علمية متوفرة حالياً`}</p>
           </div>
           <div className="flex gap-4">
-             <div className="relative">
-               <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-               <input type="text" placeholder="بحث سريع..." className="bg-white border border-gray-100 py-3 pr-11 pl-5 rounded-xl font-bold text-sm shadow-sm focus:ring-4 focus:ring-indigo-50 outline-none w-64 transition-all text-gray-900 text-right" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-             </div>
+             {activeTab !== 'settings' && (
+               <div className="relative">
+                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                 <input type="text" placeholder="بحث سريع..." className="bg-white border border-gray-100 py-3 pr-11 pl-5 rounded-xl font-bold text-sm shadow-sm focus:ring-4 focus:ring-indigo-50 outline-none w-64 transition-all text-gray-900 text-right" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+               </div>
+             )}
              {activeTab !== 'categories' && activeTab !== 'settings' && (
                <button onClick={() => { setEditingItem(null); setFormData({ type: 'book', volumeNumber: 1, mainCategory: '', subCategory: '', author: 'الشيخ أبي الحسن السليماني' }); setIsAddingContent(true); }} className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all text-sm">
                  <Plus size={18} /> إضافة مادة جديدة
                </button>
              )}
+             {activeTab === 'settings' && (
+               <button onClick={handleSaveSettings} className="flex items-center gap-2 bg-indigo-600 text-white px-8 py-3 rounded-xl font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all text-sm">
+                 <Save size={18} /> حفظ كافة الإعدادات
+               </button>
+             )}
           </div>
         </header>
 
-        {activeTab === 'categories' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 animate-in fade-in">
-             <button onClick={() => setIsAddingCategory(true)} className="min-h-[160px] bg-indigo-50 border-2 border-dashed border-indigo-200 rounded-2xl flex flex-col items-center justify-center gap-3 text-indigo-600 hover:bg-indigo-100 transition-all group">
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform"><Plus size={24} /></div>
-                <span className="font-black text-sm">إنشاء قسم رئيسي</span>
-             </button>
-             {categories.map(cat => (
-              <div key={cat.id} className="bg-white rounded-2xl p-6 border border-gray-50 shadow-sm hover:shadow-md transition-all group">
-                <div className="flex justify-between items-start mb-5">
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${cat.type === 'book' ? 'bg-blue-50 text-blue-600' : cat.type === 'audio' ? 'bg-purple-50 text-purple-600' : cat.type === 'video' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
-                    {cat.type === 'book' ? <BookOpen size={20}/> : cat.type === 'audio' ? <Mic size={20}/> : cat.type === 'video' ? <Video size={20}/> : <MessageCircleQuestion size={20}/>}
+        {activeTab === 'all' ? renderStats() : activeTab === 'categories' ? (
+          <div className="animate-in fade-in">
+             <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm flex gap-2 mb-8 w-fit mx-auto md:mx-0">
+                <CatMenuBtn active={catFilterType === 'book'} onClick={() => setCatFilterType('book')} label="مؤلفات وكتب" icon={<BookOpen size={18}/>} />
+                <CatMenuBtn active={catFilterType === 'audio'} onClick={() => setCatFilterType('audio')} label="دروس صوتية" icon={<Mic size={18}/>} />
+                <CatMenuBtn active={catFilterType === 'video'} onClick={() => setCatFilterType('video')} label="مرئيات" icon={<Video size={18}/>} />
+                <CatMenuBtn active={catFilterType === 'fatwa'} onClick={() => setCatFilterType('fatwa')} label="فتاوى وأسئلة" icon={<HelpCircle size={18}/>} />
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                <button onClick={() => { setNewCatType(catFilterType); setIsAddingCategory(true); }} className="min-h-[160px] bg-indigo-50 border-2 border-dashed border-indigo-200 rounded-2xl flex flex-col items-center justify-center gap-3 text-indigo-600 hover:bg-indigo-100 transition-all group">
+                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform"><Plus size={24} /></div>
+                    <span className="font-black text-sm">إنشاء قسم رئيسي جديد</span>
+                </button>
+                {filteredCategories.map(cat => (
+                  <div key={cat.id} className="bg-white rounded-2xl p-6 border border-gray-50 shadow-sm hover:shadow-md transition-all group">
+                    <div className="flex justify-between items-start mb-5">
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${cat.type === 'book' ? 'bg-blue-50 text-blue-600' : cat.type === 'audio' ? 'bg-purple-50 text-purple-600' : cat.type === 'video' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                        {cat.type === 'book' ? <BookOpen size={20}/> : cat.type === 'audio' ? <Mic size={20}/> : cat.type === 'video' ? <Video size={20}/> : <MessageCircleQuestion size={20}/>}
+                      </div>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => setEditingCategory(cat)} className="p-2.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"><Edit3 size={16}/></button>
+                        <button onClick={(e) => triggerDelete(e, 'categories', cat.id, cat.name)} className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16}/></button>
+                      </div>
+                    </div>
+                    <h3 className="text-base font-black text-gray-800 mb-1.5">{cat.name}</h3>
+                    <div className="flex items-center gap-2 mb-6">
+                      <span className={`text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-wider ${cat.type === 'fatwa' ? 'bg-green-50 text-green-600' : 'bg-indigo-50 text-indigo-400'}`}>{cat.type === 'fatwa' ? 'فتاوى' : cat.type === 'book' ? 'مؤلفات' : cat.type === 'audio' ? 'دروس' : 'مرئيات'}</span>
+                      <span className="text-[10px] font-bold text-gray-400">{content.filter(i => i.mainCategory === cat.name).length} مادة علمية</span>
+                    </div>
+                    <button onClick={() => setEditingCategory(cat)} className="w-full py-3 bg-gray-50 text-gray-600 rounded-xl font-bold text-xs hover:bg-indigo-600 hover:text-white transition-all text-center">إدارة التصنيفات الفرعية ({cat.subCategories?.length || 0})</button>
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => setEditingCategory(cat)} className="p-2.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"><Edit3 size={16}/></button>
-                    <button onClick={(e) => triggerDelete(e, 'categories', cat.id, cat.name)} className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16}/></button>
-                  </div>
-                </div>
-                <h3 className="text-base font-black text-gray-800 mb-1.5">{cat.name}</h3>
-                <div className="flex items-center gap-2 mb-6">
-                  <span className={`text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-wider ${cat.type === 'fatwa' ? 'bg-green-50 text-green-600' : 'bg-indigo-50 text-indigo-400'}`}>{cat.type === 'fatwa' ? 'فتاوى' : cat.type}</span>
-                  <span className="text-[10px] font-bold text-gray-400">{content.filter(i => i.mainCategory === cat.name).length} مادة علمية</span>
-                </div>
-                <button onClick={() => setEditingCategory(cat)} className="w-full py-3 bg-gray-50 text-gray-600 rounded-xl font-bold text-xs hover:bg-indigo-600 hover:text-white transition-all text-center">إدارة التصنيفات الفرعية ({cat.subCategories?.length || 0})</button>
-              </div>
-            ))}
+                ))}
+             </div>
           </div>
         ) : activeTab === 'settings' ? (
-          <div className="max-w-4xl space-y-8">
-             <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-50 space-y-8">
-                <div className="space-y-3">
-                   <label className={labelStyle}>عن دار الحديث بمأرب</label>
-                   <textarea className={inputStyle + " h-48 resize-none text-base"} value={siteInfo.aboutMarib} onChange={e => setSiteInfo({...siteInfo, aboutMarib: e.target.value})} />
+          <div className="max-w-5xl space-y-10 animate-in slide-in-from-bottom duration-500">
+             
+             {/* Section 1: Site Identity */}
+             <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+                <div className="bg-gray-50/50 px-8 py-5 border-b border-gray-100 flex items-center gap-3">
+                   <Globe className="text-indigo-600" size={20} />
+                   <h3 className="font-black text-gray-800">إعدادات هوية المنصة والموقع</h3>
                 </div>
-                <div className="space-y-3">
-                   <label className={labelStyle}>التعريف بالشيخ أبي الحسن السليماني</label>
-                   <textarea className={inputStyle + " h-48 resize-none text-base"} value={siteInfo.aboutSheikh} onChange={e => setSiteInfo({...siteInfo, aboutSheikh: e.target.value})} />
+                <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                   <div className="space-y-3">
+                      <label className={labelStyle}>اسم المنصة العلمي</label>
+                      <input type="text" className={inputStyle} value={siteInfo.siteName} onChange={e => setSiteInfo({...siteInfo, siteName: e.target.value})} placeholder="مثال: دار الحديث بمأرب" />
+                   </div>
+                   <div className="space-y-3">
+                      <label className={labelStyle}>وصف المنصة المختصر</label>
+                      <input type="text" className={inputStyle} value={siteInfo.siteDescription} onChange={e => setSiteInfo({...siteInfo, siteDescription: e.target.value})} placeholder="وصف يظهر في محركات البحث..." />
+                   </div>
+                   <div className="md:col-span-2 space-y-3">
+                      <label className={labelStyle}>عن دار الحديث بمأرب</label>
+                      <textarea className={inputStyle + " h-40 resize-none"} value={siteInfo.aboutMarib} onChange={e => setSiteInfo({...siteInfo, aboutMarib: e.target.value})} />
+                   </div>
+                   <div className="md:col-span-2 space-y-3">
+                      <label className={labelStyle}>التعريف بالشيخ أبي الحسن السليماني</label>
+                      <textarea className={inputStyle + " h-40 resize-none"} value={siteInfo.aboutSheikh} onChange={e => setSiteInfo({...siteInfo, aboutSheikh: e.target.value})} />
+                   </div>
                 </div>
-                <button onClick={async () => {
-                  setIsProcessing(true);
-                  try { await setDoc(doc(db, 'settings', 'general'), siteInfo, { merge: true }); showToast('تم حفظ الإعدادات بنجاح'); }
-                  catch(e) { showToast('فشل في حفظ الإعدادات', 'error'); }
-                  finally { setIsProcessing(false); }
-                }} className="w-full bg-indigo-600 text-white py-4.5 rounded-xl font-black shadow-lg shadow-indigo-50 text-base text-center">حفظ كافة التغييرات في الإعدادات</button>
+             </div>
+
+             {/* Section 2: Security & Privacy */}
+             <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+                <div className="bg-gray-50/50 px-8 py-5 border-b border-gray-100 flex items-center gap-3">
+                   <ShieldCheck className="text-red-600" size={20} />
+                   <h3 className="font-black text-gray-800">الأمان والحماية</h3>
+                </div>
+                <div className="p-8 space-y-6">
+                   <div className="flex items-center justify-between p-6 bg-red-50/30 border border-red-100 rounded-2xl">
+                      <div className="flex items-center gap-4">
+                         <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-red-600 shadow-sm"><Lock size={20}/></div>
+                         <div>
+                            <span className="text-xs font-black text-gray-400 block mb-1 uppercase">بريد الأدمن الرسمي</span>
+                            <span className="font-bold text-gray-900">{ADMIN_EMAIL}</span>
+                         </div>
+                      </div>
+                      <span className="text-[10px] font-black text-red-500 bg-red-100 px-3 py-1 rounded-full uppercase">صلاحيات كاملة</span>
+                   </div>
+                   <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl text-[12px] font-bold text-gray-500 leading-relaxed">
+                      تنبيه: لا يمكن تغيير بريد الأدمن من داخل لوحة التحكم لأسباب أمنية. يرجى التواصل مع الدعم الفني في حال الحاجة لتعديل بيانات الوصول الأساسية.
+                   </div>
+                </div>
+             </div>
+
+             {/* Section 3: Technical Settings */}
+             <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+                <div className="bg-gray-50/50 px-8 py-5 border-b border-gray-100 flex items-center gap-3">
+                   <Cpu className="text-amber-600" size={20} />
+                   <h3 className="font-black text-gray-800">الأمور الفنية والتقنية</h3>
+                </div>
+                <div className="p-8">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="flex items-center justify-between p-6 border border-gray-100 rounded-2xl bg-white shadow-sm">
+                         <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><AlertTriangle size={20}/></div>
+                            <div>
+                               <span className="font-black text-gray-800 block mb-0.5 text-sm">وضع الصيانة</span>
+                               <span className="text-xs font-bold text-gray-400">إغلاق الموقع مؤقتاً للزوار</span>
+                            </div>
+                         </div>
+                         <button 
+                            onClick={() => setSiteInfo({...siteInfo, maintenanceMode: !siteInfo.maintenanceMode})}
+                            className={`w-14 h-8 rounded-full transition-all relative ${siteInfo.maintenanceMode ? 'bg-red-500' : 'bg-gray-200'}`}
+                         >
+                            <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-sm ${siteInfo.maintenanceMode ? 'right-7' : 'right-1'}`}></div>
+                         </button>
+                      </div>
+
+                      <div className="flex items-center justify-between p-6 border border-gray-100 rounded-2xl bg-white shadow-sm">
+                         <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><Database size={20}/></div>
+                            <div>
+                               <span className="font-black text-gray-800 block mb-0.5 text-sm">حالة الخادم</span>
+                               <span className="text-xs font-bold text-green-500 flex items-center gap-1"><Check size={12}/> متصل وجاهز</span>
+                            </div>
+                         </div>
+                         <div className="text-[10px] font-black text-gray-400 bg-gray-50 px-3 py-1 rounded-full">v2.5.0-stable</div>
+                      </div>
+                   </div>
+                </div>
              </div>
           </div>
         ) : (
-          <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-50 overflow-hidden">
+          <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-50 overflow-hidden animate-in slide-in-from-left duration-300">
              <table className="w-full text-right text-sm">
                 <thead className="bg-gray-50 text-gray-500 font-black uppercase border-b border-gray-100">
                    <tr>
@@ -523,5 +692,79 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ content, user }) => {
     </div>
   );
 };
+
+interface StatCardProps {
+  label: string;
+  count: number;
+  icon: React.ReactNode;
+  color: 'blue' | 'purple' | 'red' | 'green';
+  percent: number;
+}
+
+const StatCard: React.FC<StatCardProps> = ({ label, count, icon, color, percent }) => {
+  const colors = {
+    blue: 'text-blue-600 bg-blue-50',
+    purple: 'text-purple-600 bg-purple-50',
+    red: 'text-red-600 bg-red-50',
+    green: 'text-green-600 bg-green-50'
+  };
+
+  return (
+    <div className="bg-white p-8 rounded-[2.2rem] border border-gray-50 shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
+       <div className="flex items-center gap-5 relative z-10">
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ${colors[color]}`}>
+            {icon}
+          </div>
+          <div className="text-right">
+             <div className="text-sm font-black text-gray-400 mb-1">{label}</div>
+             <div className="text-3xl font-black text-gray-800">{count}</div>
+          </div>
+       </div>
+       <div className="mt-6 flex items-center gap-3 relative z-10">
+          <div className="flex-1 h-1.5 bg-gray-50 rounded-full overflow-hidden">
+             <div className={`h-full ${color === 'blue' ? 'bg-blue-500' : color === 'purple' ? 'bg-purple-500' : color === 'red' ? 'bg-red-500' : 'bg-green-500'} rounded-full`} style={{width: `${percent}%`}}></div>
+          </div>
+          <span className="text-[10px] font-black text-gray-400">{Math.round(percent)}%</span>
+       </div>
+       <TrendingUp className="absolute -bottom-4 -left-4 text-gray-50 group-hover:text-gray-100 transition-colors" size={100} />
+    </div>
+  );
+};
+
+const ProgressRow: React.FC<{label: string, count: number, total: number, color: string}> = ({ label, count, total, color }) => {
+  const percent = total > 0 ? (count / total) * 100 : 0;
+  return (
+    <div className="space-y-2">
+      <div className="flex justify-between items-center px-1">
+        <span className="text-sm font-black text-gray-700">{label}</span>
+        <span className="text-sm font-bold text-gray-400">{count} مادة</span>
+      </div>
+      <div className="h-4 w-full bg-gray-50 rounded-full overflow-hidden p-[3px]">
+         <div className={`h-full ${color} rounded-full transition-all duration-1000`} style={{ width: `${percent}%` }}></div>
+      </div>
+    </div>
+  );
+};
+
+interface CatMenuBtnProps {
+    active: boolean;
+    onClick: () => void;
+    label: string;
+    icon: React.ReactNode;
+}
+
+const CatMenuBtn: React.FC<CatMenuBtnProps> = ({ active, onClick, label, icon }) => (
+    <button 
+        onClick={onClick}
+        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-sm transition-all ${
+            active 
+            ? 'bg-indigo-600 text-white shadow-lg' 
+            : 'bg-transparent text-gray-500 hover:bg-indigo-50 hover:text-indigo-600'
+        }`}
+    >
+        {icon}
+        {label}
+    </button>
+);
 
 export default AdminDashboard;
