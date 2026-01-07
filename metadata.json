@@ -1,0 +1,8 @@
+{
+  "name": "sulaymani",
+  "description": "A beautiful, mobile-first content platform for reading books, listening to audio, and watching videos, featuring a dedicated desktop admin dashboard for content management.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
